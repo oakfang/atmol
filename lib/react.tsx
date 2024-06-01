@@ -36,7 +36,7 @@ function createParticleStore<T>(particle: Particle<T>): ExternalStore<T> {
 }
 
 /**
- * Custom React hook that returns the current value of a given {@link Particle} and updates it when the value changes.
+ * Custom React hook that returns the current value of a given {@link Particle} and updates the component when the value changes.
  *
  * @template T The type of value stored in the Particle
  * @param {Particle<T>} particle The Particle whose value is to be retrieved

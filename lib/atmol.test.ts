@@ -15,7 +15,7 @@ test("waves(atoms)", () => {
   wave(() => {
     set(b, get(a) + 1);
   });
-  wave(() => {
+  const stop =wave(() => {
     set(c, get(b) + 1);
   });
 
@@ -25,6 +25,12 @@ test("waves(atoms)", () => {
   set(a, 1);
 
   expect(get(b)).toBe(2);
+  expect(get(c)).toBe(3);
+
+  stop();
+  set(a, 2);
+
+  expect(get(b)).toBe(3);
   expect(get(c)).toBe(3);
 });
 

@@ -1,4 +1,4 @@
-import { runInContext } from "../graph";
+import { releaseDependencies, runInContext } from "../graph";
 import { notifySym, readSym, type Particle } from "../particle";
 import type { WaveScheduler } from "./scheduler";
 import { sync } from "./sync";
@@ -26,7 +26,6 @@ export function wave<T>(
   effect: () => T,
   scheduler: WaveScheduler = DEFAULT_SCHEDULER
 ): Unsubscribe {
-  const unwatchers = new Map<Particle<any>, Unsubscribe>();
   const waveParticle = {
     [readSym]() {},
     [notifySym]() {
@@ -38,7 +37,6 @@ export function wave<T>(
   scheduler.schedule(waveParticle);
 
   return () => {
-    unwatchers.forEach((u) => u());
-    unwatchers.clear();
+    releaseDependencies(waveParticle)
   };
 }

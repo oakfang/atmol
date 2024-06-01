@@ -1,9 +1,19 @@
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "bun:test";
-import { createReaction, waitForParticleValue } from ".";
-import { atom, get, molecule, set } from "..";
+import { createReaction } from ".";
+import { atom, get, molecule, set, wave, type Particle } from "..";
 import { $, Reactive, useParticleValue, useReaction } from "../react";
+
+function waitForParticleValue<T>(particle: Particle<T>, value: T) {
+  return new Promise<void>((resolve) => {
+    wave(() => {
+      if (get(particle) === value) {
+        resolve();
+      }
+    });
+  });
+}
 
 test("reaction (success)", async () => {
   const resourceId = atom(0);
