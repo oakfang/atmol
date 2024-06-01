@@ -2,6 +2,7 @@ import {
   isValidElement,
   memo,
   useInsertionEffect,
+  useMemo,
   useState,
   useSyncExternalStore,
   type ComponentPropsWithoutRef,
@@ -13,7 +14,7 @@ import {
 import { molecule } from "./molecule";
 import { get } from "./ops";
 import type { Particle } from "./particle";
-import { wave } from "./wave";
+import { async, wave } from "./wave";
 import type { Reaction } from "./reaction";
 
 type ExternalStore<T> = {
@@ -30,7 +31,7 @@ function createParticleStore<T>(particle: Particle<T>): ExternalStore<T> {
       return wave(() => {
         get(particle);
         callback();
-      });
+      }, async);
     },
   };
 }
@@ -78,38 +79,30 @@ export function Reactive<T extends ElementType>({
   ...props
 }: { as: T } & ComponentPropsWithoutRef<T> &
   Reactive<ComponentPropsWithoutRef<T>>) {
-  const [atm] = useState(() =>
-    molecule(() => {
-      const modProps = { ...props };
-      for (const key of Object.keys(props)) {
-        if (key.startsWith("$")) {
-          const reactiveKey = key as keyof Reactive<
-            ComponentPropsWithoutRef<T>
-          > &
-            keyof typeof props;
-          const passiveKey = key.slice(1) as keyof ComponentPropsWithoutRef<T> &
-            keyof typeof props;
-          modProps[passiveKey] = (
-            props[
-              reactiveKey
-            ] as () => ComponentPropsWithoutRef<T>[typeof passiveKey]
-          )();
-          delete modProps[reactiveKey];
-        }
-      }
-      return (
-        <As
-          {...(modProps as T extends JSXElementConstructor<infer P>
-            ? P extends JSX.IntrinsicAttributes
-              ? P
-              : never
-            : never)}
-        />
-      );
-    })
-  );
+  return useMemo(() => {
+    const propsMol = molecule(
+      () =>
+        Object.fromEntries(
+          Object.entries(props).map(([key, value]) => {
+            if (key.startsWith("$")) {
+              return [key.slice(1), value()] as const;
+            }
+            return [key, value] as const;
+          })
+        ) as ComponentPropsWithoutRef<T>
+    );
+    const component = molecule(() => (
+      <As
+        {...(get(propsMol) as T extends JSXElementConstructor<infer P>
+          ? P extends JSX.IntrinsicAttributes
+            ? P
+            : never
+          : never)}
+      />
+    ));
 
-  return $(atm);
+    return $(component);
+  }, [props]);
 }
 
 /**
