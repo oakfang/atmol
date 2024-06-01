@@ -12,10 +12,10 @@ test("waves(atoms)", () => {
   const a = atom(0);
   const b = atom(0);
   const c = atom(0);
-  wave((get) => {
+  wave(() => {
     set(b, get(a) + 1);
   });
-  wave((get) => {
+  wave(() => {
     set(c, get(b) + 1);
   });
 
@@ -30,7 +30,7 @@ test("waves(atoms)", () => {
 
 test("molecule:get/set", () => {
   const a = atom(0);
-  const b = molecule((get) => get(a) * 2);
+  const b = molecule(() => get(a) * 2);
   expect(get(b)).toBe(0);
   set(a, 1);
   expect(get(b)).toBe(2);
@@ -38,10 +38,10 @@ test("molecule:get/set", () => {
 
 test("waves(molecule)", () => {
   const a = atom(0);
-  const b = molecule((get) => get(a) * 2);
-  const c = molecule((get) => get(b) * 2);
+  const b = molecule(() => get(a) * 2);
+  const c = molecule(() => get(b) * 2);
   const m = mock();
-  wave((get) => {
+  wave(() => {
     m(get(c));
   });
 
@@ -60,8 +60,8 @@ test("waves(molecule)", () => {
 
 test("molecule referential equality", () => {
   const count = atom(0);
-  const color = molecule((get) => (get(count) > 10 ? "red" : "green"));
-  const style = molecule((get) => ({ color: get(color) }));
+  const color = molecule(() => (get(count) > 10 ? "red" : "green"));
+  const style = molecule(() => ({ color: get(color) }));
 
   const currentStyle = get(style);
 
@@ -79,7 +79,7 @@ test("async wave scheduler", async () => {
   const b = atom(0);
   const c = atom(0);
 
-  wave((get) => {
+  wave(() => {
     set(b, get(a) + 1);
     set(c, get(b) + 1);
     set(a, 1);

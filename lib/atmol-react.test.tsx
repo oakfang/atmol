@@ -1,14 +1,14 @@
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "bun:test";
-import { atom, molecule, set, type Getter } from ".";
+import { atom, molecule, set, get } from ".";
 import { Reactive, $ } from "./react";
 import { Profiler } from "react";
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
-  const doubleCount = molecule((get) => Math.floor(get(count) / 5));
-  const color = molecule((get) => (get(count) < 10 ? "green" : "red"));
+  const doubleCount = molecule(() => Math.floor(get(count) / 5));
+  const color = molecule(() => (get(count) < 10 ? "green" : "red"));
 
   function Text() {
     onRender();
@@ -20,7 +20,7 @@ function createScenario(onRender: () => void, onMicroRender: () => void) {
     return (
       <>
         <Profiler id="heading-root" onRender={onMicroRender}>
-          <Reactive as="h1" $style={(get) => ({ color: get(color) })}>
+          <Reactive as="h1" $style={() => ({ color: get(color) })}>
             <Text />
           </Reactive>
         </Profiler>

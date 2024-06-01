@@ -1,13 +1,25 @@
 import { writeSym, type Atom, type Writer } from "./atom";
+import { markDependency } from "./graph";
 import { readSym, type Particle } from "./particle";
 
 /**
- * Retrieves the current value from the given {@link Particle}.
+ * Retrieves the current value from the given {@link Particle} and mark it as a dependency in the current context.
  *
  * @param particle The {@link Particle} object from which to retrieve the value.
  * @returns The current value of the particle.
  */
 export function get<T>(particle: Particle<T>): T {
+  markDependency(particle);
+  return peek(particle);
+}
+
+/**
+ * Retrieves the current value from the given {@link Particle} without marking it as a dependency in the current context.
+ *
+ * @param particle The {@link Particle} object from which to retrieve the value.
+ * @returns The current value of the particle.
+ */
+export function peek<T>(particle: Particle<T>): T {
   return particle[readSym]();
 }
 

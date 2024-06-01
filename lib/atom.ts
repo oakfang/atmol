@@ -1,4 +1,5 @@
-import { getDependents, notifySym, readSym, type Particle } from "./particle";
+import { getDependents } from "./graph";
+import { notifySym, readSym, type Particle } from "./particle";
 
 export const writeSym = Symbol("write");
 
@@ -13,7 +14,7 @@ export interface Atom<T> extends Particle<T> {
 
 /**
  * Creates an {@link Atom} object with the provided initial value.
- * 
+ *
  * @param initialValue The initial value for the Atom.
  * @returns An {@link Atom} object with read and write capabilities.
  */

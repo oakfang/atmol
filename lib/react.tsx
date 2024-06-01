@@ -9,7 +9,7 @@ import {
   type JSXElementConstructor,
   type ReactNode,
 } from "react";
-import { molecule, type Getter } from "./molecule";
+import { molecule } from "./molecule";
 import { get } from "./ops";
 import type { Particle } from "./particle";
 import { wave } from "./wave";
@@ -25,7 +25,7 @@ function createParticleStore<T>(particle: Particle<T>): ExternalStore<T> {
       return get(particle);
     },
     subscribe(callback) {
-      return wave((get) => {
+      return wave(() => {
         get(particle);
         callback();
       });
@@ -49,7 +49,7 @@ export function useParticleValue<T>(particle: Particle<T>): T {
 const COMPONENTS_CACHE = new WeakMap<Particle<any>, ComponentType<{}>>();
 
 type Reactive<T> = {
-  [k in Exclude<keyof T, symbol> as `$${k}`]?: (get: Getter) => T[k];
+  [k in Exclude<keyof T, symbol> as `$${k}`]?: () => T[k];
 };
 
 /**
@@ -77,7 +77,7 @@ export function Reactive<T extends ElementType>({
 }: { as: T } & ComponentPropsWithoutRef<T> &
   Reactive<ComponentPropsWithoutRef<T>>) {
   const [atm] = useState(() =>
-    molecule((get) => {
+    molecule(() => {
       const modProps = { ...props };
       for (const key of Object.keys(props)) {
         if (key.startsWith("$")) {
@@ -88,10 +88,10 @@ export function Reactive<T extends ElementType>({
           const passiveKey = key.slice(1) as keyof ComponentPropsWithoutRef<T> &
             keyof typeof props;
           modProps[passiveKey] = (
-            props[reactiveKey] as (
-              get: Getter
-            ) => ComponentPropsWithoutRef<T>[typeof passiveKey]
-          )(get);
+            props[
+              reactiveKey
+            ] as () => ComponentPropsWithoutRef<T>[typeof passiveKey]
+          )();
           delete modProps[reactiveKey];
         }
       }
@@ -112,7 +112,7 @@ export function Reactive<T extends ElementType>({
 
 /**
  * Inline a particle with a renderable value within a component.
- * 
+ *
  * @example
  * const count = atom(0);
  * function Component() {
