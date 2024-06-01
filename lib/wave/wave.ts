@@ -1,5 +1,5 @@
 import { releaseDependencies, runInContext } from "../graph";
-import { notifySym, readSym, type Particle } from "../particle";
+import { notifySym, readSym } from "../particle";
 import type { WaveScheduler } from "./scheduler";
 import { sync } from "./sync";
 import type { Unsubscribe, Wave } from "./types";
