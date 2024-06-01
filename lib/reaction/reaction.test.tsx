@@ -1,10 +1,9 @@
-import { test, expect } from "bun:test";
-import { createReaction, waitForParticleValue, type Reaction } from ".";
-import { atom, get, molecule, set, wave } from "..";
-import { $, Reactive, useParticleValue } from "../react";
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useInsertionEffect } from "react";
+import { expect, test } from "bun:test";
+import { createReaction, waitForParticleValue } from ".";
+import { atom, get, molecule, set } from "..";
+import { $, Reactive, useParticleValue, useReaction } from "../react";
 
 test("reaction (success)", async () => {
   const resourceId = atom(0);
@@ -62,16 +61,9 @@ test("resction in react components", async () => {
       return "eggs";
     },
     {
-      autoRun: false,
+      autoObserve: false,
     }
   );
-  function useReaction<Value>(reaction: Reaction<Value>) {
-    useInsertionEffect(() => {
-      reaction.observe();
-      return () => reaction.unobserve();
-    }, [reaction]);
-    return reaction;
-  }
 
   function ChildA() {
     useReaction(reaction);

@@ -10,15 +10,16 @@ export type Reaction<Result> = {
 };
 
 export type ReactionOptions = {
-  autoRun: boolean;
+  autoObserve: boolean;
+  keepPrevious: boolean;
 };
 
 export function createReaction<Trigger, Result>(
   trigger: Particle<Trigger>,
   action: (input: Trigger) => Promise<Result>,
-  { autoRun = true }: Partial<ReactionOptions> = {}
+  { autoObserve = true, keepPrevious = false }: Partial<ReactionOptions> = {}
 ): Reaction<Result> {
-  const observerCount = atom(autoRun ? 1 : 0);
+  const observerCount = atom(autoObserve ? 1 : 0);
   const [state, setState] = createQuantumPair<
     "idle" | "pending" | "success" | "error"
   >("idle");
@@ -59,8 +60,10 @@ export function createReaction<Trigger, Result>(
             setState("error");
           }
         );
-        setResult(null);
-        setError(null);
+        if (!keepPrevious) {
+          setResult(null);
+          setError(null);
+        }
         break;
       case "success":
         setError(null);
