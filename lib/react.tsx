@@ -160,8 +160,8 @@ export function $<T extends ReactNode>(particle: Particle<T>) {
  * Custom React hook that manages the observation of a reaction so that it becomes unobserved when all observing components unmount.
  *
  * @template Value - The type of value stored in the reaction.
- * @param {Reaction<Value>} reaction - The reaction object containing the result, error, state, observe, and unobserve functions.
- * @returns {Reaction<Value>} The reaction object with observation side effects managed by the hook.
+ * @param reaction - The {@link Reaction} object containing the result, error, state, observe, and unobserve functions.
+ * @returns The {@link Reaction} object whose observation is now managed by the hook.
  */
 export function useReaction<Value>(reaction: Reaction<Value>) {
   useInsertionEffect(() => {

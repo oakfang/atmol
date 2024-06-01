@@ -1,6 +1,10 @@
 import { async, atom, get, peek, set, wave, type Particle } from "..";
 import { createQuantumPair } from "./quantum-pair";
 
+/**
+ * Defines a Reaction type that represents a set of particles for result, error, and state,
+ * along with methods to observe and unobserve the reaction.
+ */
 export type Reaction<Result> = {
   result: Particle<Result | null>;
   error: Particle<unknown | null>;
@@ -9,11 +13,27 @@ export type Reaction<Result> = {
   unobserve: () => void;
 };
 
+/**
+ * Defines the ReactionOptions type representing options for creating a reaction.
+ *
+ * @property autoObserve - A boolean indicating whether the reaction should automatically observe itself.
+ * @property keepPrevious - A boolean indicating whether the previous result or error should be kept.
+ */
 export type ReactionOptions = {
   autoObserve: boolean;
   keepPrevious: boolean;
 };
 
+/**
+ * Creates a reaction that triggers an asynchronous action based on a given trigger particle.
+ * The reaction manages the state of the action (idle, pending, success, error) and provides
+ * particles for the result and error values.
+ *
+ * @param trigger The trigger particle that initiates the action.
+ * @param action The asynchronous function to be executed when the trigger changes.
+ * @param options Additional options for configuring the reaction ({@link ReactionOptions}).
+ * @returns An {@link Reaction} object containing the result particle, error particle, state particle, and methods to observe/unobserve the reaction.
+ */
 export function createReaction<Trigger, Result>(
   trigger: Particle<Trigger>,
   action: (input: Trigger) => Promise<Result>,

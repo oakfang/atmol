@@ -1,6 +1,12 @@
 import { getDependents } from "../graph";
 import { notifySym, readSym, type Particle } from "../particle";
 
+/**
+ * Creates a "quantum pair" consisting of a particle and a write function.
+ *
+ * @param initialValue The initial value of the quantum pair.
+ * @returns A tuple containing the particle and the write function.
+ */
 export function createQuantumPair<T>(initialValue: T) {
   let value = initialValue;
 
