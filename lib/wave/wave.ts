@@ -1,8 +1,8 @@
-import { releaseDependencies, runInContext } from "../graph";
-import { notifySym, readSym } from "../particle";
-import type { WaveScheduler } from "./scheduler";
-import { sync } from "./sync";
-import type { Unsubscribe, Wave } from "./types";
+import { releaseDependencies, runInContext } from '../graph';
+import { notifySym, readSym } from '../particle';
+import type { WaveScheduler } from './scheduler';
+import { sync } from './sync';
+import type { Unsubscribe, Wave } from './types';
 
 let DEFAULT_SCHEDULER: WaveScheduler = sync;
 
@@ -24,7 +24,7 @@ export function setDefaultScheduler(scheduler: WaveScheduler) {
  */
 export function wave<T>(
   effect: () => T,
-  scheduler: WaveScheduler = DEFAULT_SCHEDULER
+  scheduler: WaveScheduler = DEFAULT_SCHEDULER,
 ): Unsubscribe {
   const waveParticle = {
     [readSym]() {},
@@ -37,6 +37,6 @@ export function wave<T>(
   scheduler.schedule(waveParticle);
 
   return () => {
-    releaseDependencies(waveParticle)
+    releaseDependencies(waveParticle);
   };
 }

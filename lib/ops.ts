@@ -1,6 +1,6 @@
-import { writeSym, type Atom, type Writer } from "./atom";
-import { markDependency } from "./graph";
-import { readSym, type Particle } from "./particle";
+import { type Atom, type Writer, writeSym } from './atom';
+import { markDependency } from './graph';
+import { type Particle, readSym } from './particle';
 
 /**
  * Retrieves the current value from the given {@link Particle} and mark it as a dependency in the current context.

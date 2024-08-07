@@ -1,16 +1,16 @@
-import type { Particle } from "./particle";
+import type { Particle } from './particle';
 
 const DEPENDENT_TO_DEPENDENCIES = new WeakMap<
-  Particle<any>,
-  Set<Particle<any>>
+  Particle<unknown>,
+  Set<Particle<unknown>>
 >();
 const DEPENDENCY_TO_DEPENDENTS = new WeakMap<
-  Particle<any>,
-  Set<Particle<any>>
+  Particle<unknown>,
+  Set<Particle<unknown>>
 >();
-const CONTEXT_STACK = Array<Particle<any>>();
+const CONTEXT_STACK = Array<Particle<unknown>>();
 
-export function runInContext<T>(particle: Particle<any>, fn: () => T): T {
+export function runInContext<T>(particle: Particle<unknown>, fn: () => T): T {
   try {
     CONTEXT_STACK.push(particle);
     return fn();
@@ -19,20 +19,20 @@ export function runInContext<T>(particle: Particle<any>, fn: () => T): T {
   }
 }
 
-export function markDependency(depencency: Particle<any>) {
+export function markDependency(dependency: Particle<unknown>) {
   const dependent = CONTEXT_STACK[CONTEXT_STACK.length - 1];
   if (!dependent) return;
   if (!DEPENDENT_TO_DEPENDENCIES.has(dependent)) {
     DEPENDENT_TO_DEPENDENCIES.set(dependent, new Set());
   }
-  DEPENDENT_TO_DEPENDENCIES.get(dependent)?.add(depencency);
-  if (!DEPENDENCY_TO_DEPENDENTS.has(depencency)) {
-    DEPENDENCY_TO_DEPENDENTS.set(depencency, new Set());
+  DEPENDENT_TO_DEPENDENCIES.get(dependent)?.add(dependency);
+  if (!DEPENDENCY_TO_DEPENDENTS.has(dependency)) {
+    DEPENDENCY_TO_DEPENDENTS.set(dependency, new Set());
   }
-  DEPENDENCY_TO_DEPENDENTS.get(depencency)?.add(dependent);
+  DEPENDENCY_TO_DEPENDENTS.get(dependency)?.add(dependent);
 }
 
-export function releaseDependencies(particle: Particle<any>) {
+export function releaseDependencies(particle: Particle<unknown>) {
   const dependents = DEPENDENT_TO_DEPENDENCIES.get(particle);
   if (!dependents) return;
   for (const dependent of dependents) {
@@ -41,6 +41,6 @@ export function releaseDependencies(particle: Particle<any>) {
   DEPENDENT_TO_DEPENDENCIES.delete(particle);
 }
 
-export function getDependents(dependency: Particle<any>) {
+export function getDependents(dependency: Particle<unknown>) {
   return DEPENDENCY_TO_DEPENDENTS.get(dependency) ?? new Set();
 }

@@ -1,5 +1,5 @@
-import { async, atom, get, peek, set, wave, type Particle } from "..";
-import { createQuantumPair } from "./quantum-pair";
+import { type Particle, async, atom, get, peek, set, wave } from '..';
+import { createQuantumPair } from './quantum-pair';
 
 /**
  * Defines a Reaction type that represents a set of particles for result, error, and state,
@@ -8,7 +8,7 @@ import { createQuantumPair } from "./quantum-pair";
 export type Reaction<Result> = {
   result: Particle<Result | null>;
   error: Particle<unknown | null>;
-  state: Particle<"idle" | "pending" | "success" | "error">;
+  state: Particle<'idle' | 'pending' | 'success' | 'error'>;
   observe: () => void;
   unobserve: () => void;
 };
@@ -37,58 +37,58 @@ export type ReactionOptions = {
 export function createReaction<Trigger, Result>(
   trigger: Particle<Trigger>,
   action: (input: Trigger) => Promise<Result>,
-  { autoObserve = true, keepPrevious = false }: Partial<ReactionOptions> = {}
+  { autoObserve = true, keepPrevious = false }: Partial<ReactionOptions> = {},
 ): Reaction<Result> {
   const observerCount = atom(autoObserve ? 1 : 0);
   const [state, setState] = createQuantumPair<
-    "idle" | "pending" | "success" | "error"
-  >("idle");
+    'idle' | 'pending' | 'success' | 'error'
+  >('idle');
   const [result, setResult] = createQuantumPair<Result | null>(null);
   const [error, setError] = createQuantumPair<unknown | null>(null);
   let ctrl: AbortController | null = null;
 
   wave(() => {
     get(trigger);
-    setState("idle");
+    setState('idle');
   });
 
   wave(() => {
     const currentController = ctrl;
     if (!get(observerCount)) return;
     switch (get(state)) {
-      case "idle":
+      case 'idle':
         if (ctrl) {
           ctrl.abort();
         }
         ctrl = new AbortController();
-        setState("pending");
+        setState('pending');
         break;
-      case "pending":
+      case 'pending':
         action(peek(trigger)).then(
           (v) => {
             if (currentController?.signal.aborted) {
               return;
             }
             setResult(v);
-            setState("success");
+            setState('success');
           },
           (e) => {
             if (currentController?.signal.aborted) {
               return;
             }
             setError(e);
-            setState("error");
-          }
+            setState('error');
+          },
         );
         if (!keepPrevious) {
           setResult(null);
           setError(null);
         }
         break;
-      case "success":
+      case 'success':
         setError(null);
         break;
-      case "error":
+      case 'error':
         setResult(null);
         break;
     }

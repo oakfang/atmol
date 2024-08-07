@@ -15,7 +15,8 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "dle": "tsup"
+    "dle": "tsup",
+    "lint": "bunx @biomejs/biome check --write ./lib"
   },
   "exports": {
     ".": {
@@ -32,6 +33,7 @@
     }
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
     "@happy-dom/global-registrator": "^14.12.0",
     "@testing-library/react": "^15.0.7",
     "@testing-library/user-event": "^14.5.2",

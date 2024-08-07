@@ -1,7 +1,7 @@
-import { getDependents } from "./graph";
-import { notifySym, readSym, type Particle } from "./particle";
+import { getDependents } from './graph';
+import { type Particle, notifySym, readSym } from './particle';
 
-export const writeSym = Symbol("write");
+export const writeSym = Symbol('write');
 
 export type Writer<T> = T | ((current: T) => T);
 
@@ -24,10 +24,12 @@ export function atom<T>(initialValue: T): Atom<T> {
   const atm = {
     [readSym]: () => value,
     [writeSym](f) {
-      const nextValue = typeof f === "function" ? (f as (v: T) => T)(value) : f;
+      const nextValue = typeof f === 'function' ? (f as (v: T) => T)(value) : f;
       if (nextValue !== value) {
         value = nextValue;
-        getDependents(atm).forEach((p) => p[notifySym]());
+        for (const p of getDependents(atm)) {
+          p[notifySym]();
+        }
       }
     },
     [notifySym]() {},

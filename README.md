@@ -246,29 +246,6 @@ function Component() {
 }
 ```
 
-### `Reactive`
-
-A React component that accepts an `as` prop, which accepts any renderable component or element type, and its usual props. In addition, it accepts a `$` prefixed prop for each of its props, which will be treated as a particle and will be observed by the component.
-
-```tsx
-import { atom, set, get } from "@oakfang/atmol";
-import { Reactive, $ } from "@oakfang/atmol/react";
-
-const count = atom(0);
-
-function Component() {
-  return (
-    <Reactive
-      as="button"
-      $style={(get) => ({ padding: `${get(count)}em` })}
-      onClick={() => set(count, (c) => c + 1)}
-    >
-      <span>Count: {$(count)}</span>
-    </Reactive>
-  );
-}
-```
-
 ### `useReaction<Value>(reaction: Reaction<Value>): Reaction<Value>`
 
 A custom React hook that manages the observation of a reaction so that it becomes unobserved when all observing components unmount.

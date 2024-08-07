@@ -1,12 +1,12 @@
-import type { WaveScheduler } from "./scheduler";
-import type { Wave } from "./types";
+import type { WaveScheduler } from './scheduler';
+import type { Wave } from './types';
 
 /**
  * Represents an asynchronous wave scheduler that implements the WaveScheduler interface.
- * 
+ *
  * This scheduler allows registering waves with associated effects and scheduling them to run asynchronously.
  * It keeps track of pending waves and ensures that each wave's effect is executed only once.
- * 
+ *
  * @implements {WaveScheduler}
  */
 class AsyncWaveScheduler implements WaveScheduler {
@@ -22,7 +22,8 @@ class AsyncWaveScheduler implements WaveScheduler {
   schedule(wave: Wave): void {
     if (!this.#hadInitialRun.has(wave)) {
       this.#hadInitialRun.add(wave);
-      return this.#waves.get(wave)?.();
+      this.#waves.get(wave)?.();
+      return;
     }
     this.#pendingWaves.add(wave);
     if (!this.#isRunning) {
@@ -31,9 +32,9 @@ class AsyncWaveScheduler implements WaveScheduler {
         while (this.#pendingWaves.size) {
           const currentlyPending = [...this.#pendingWaves];
           this.#pendingWaves.clear();
-          currentlyPending.forEach((wave) => {
+          for (const wave of currentlyPending) {
             this.#waves.get(wave)?.();
-          });
+          }
         }
         this.#isRunning = false;
       });

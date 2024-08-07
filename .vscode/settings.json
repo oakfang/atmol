@@ -1,6 +1,10 @@
 {
-    "cSpell.words": [
-        "atmol",
-        "unobserve"
-    ]
+  "cSpell.words": ["atmol", "unobserve"],
+  "editor.defaultFormatter": "biomejs.biome",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }

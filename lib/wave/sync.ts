@@ -1,5 +1,5 @@
-import type { WaveScheduler } from "./scheduler";
-import type { Wave } from "./types";
+import type { WaveScheduler } from './scheduler';
+import type { Wave } from './types';
 
 /**
  * Represents a synchronous wave scheduler that implements the {@link WaveScheduler} interface.

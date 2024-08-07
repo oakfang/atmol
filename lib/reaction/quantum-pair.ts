@@ -1,5 +1,5 @@
-import { getDependents } from "../graph";
-import { notifySym, readSym, type Particle } from "../particle";
+import { getDependents } from '../graph';
+import { type Particle, notifySym, readSym } from '../particle';
 
 /**
  * Creates a "quantum pair" consisting of a particle and a write function.
@@ -18,7 +18,9 @@ export function createQuantumPair<T>(initialValue: T) {
   const write = (nextValue: T) => {
     if (nextValue !== value) {
       value = nextValue;
-      getDependents(prt).forEach((p) => p[notifySym]());
+      for (const p of getDependents(prt)) {
+        p[notifySym]();
+      }
     }
   };
 

@@ -1,21 +1,21 @@
-import { test, expect, mock } from "bun:test";
-import { atom, get, set, molecule, wave, async, peek } from ".";
+import { expect, mock, test } from 'bun:test';
+import { async, atom, get, molecule, peek, set, wave } from '.';
 
-test("atom:get/set", () => {
+test('atom:get/set', () => {
   const a = atom(0);
   expect(get(a)).toBe(0);
   set(a, 1);
   expect(get(a)).toBe(1);
 });
 
-test("waves(atoms)", () => {
+test('waves(atoms)', () => {
   const a = atom(0);
   const b = atom(0);
   const c = atom(0);
   wave(() => {
     set(b, get(a) + 1);
   });
-  const stop =wave(() => {
+  const stop = wave(() => {
     set(c, get(b) + 1);
   });
 
@@ -54,7 +54,7 @@ test('peeking does not trigger a wave', () => {
   expect(get(c)).toBe(2);
 });
 
-test("molecule:get/set", () => {
+test('molecule:get/set', () => {
   const a = atom(0);
   const b = molecule(() => get(a) * 2);
   expect(get(b)).toBe(0);
@@ -62,7 +62,7 @@ test("molecule:get/set", () => {
   expect(get(b)).toBe(2);
 });
 
-test("waves(molecule)", () => {
+test('waves(molecule)', () => {
   const a = atom(0);
   const b = molecule(() => get(a) * 2);
   const c = molecule(() => get(b) * 2);
@@ -84,23 +84,23 @@ test("waves(molecule)", () => {
   expect(m).toHaveBeenCalledWith(4);
 });
 
-test("molecule referential equality", () => {
+test('molecule referential equality', () => {
   const count = atom(0);
-  const color = molecule(() => (get(count) > 10 ? "red" : "green"));
+  const color = molecule(() => (get(count) > 10 ? 'red' : 'green'));
   const style = molecule(() => ({ color: get(color) }));
 
   const currentStyle = get(style);
 
-  expect(currentStyle).toEqual({ color: "green" });
+  expect(currentStyle).toEqual({ color: 'green' });
   set(count, 10);
   expect(currentStyle === get(style)).toBe(true);
-  expect(currentStyle).toEqual({ color: "green" });
+  expect(currentStyle).toEqual({ color: 'green' });
   set(count, 20);
   expect(currentStyle === get(style)).toBe(false);
-  expect(get(style)).toEqual({ color: "red" });
+  expect(get(style)).toEqual({ color: 'red' });
 });
 
-test("async wave scheduler", async () => {
+test('async wave scheduler', async () => {
   const a = atom(0);
   const b = atom(0);
   const c = atom(0);

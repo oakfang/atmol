@@ -1,21 +1,24 @@
 import {
-  isValidElement,
-  memo,
-  useInsertionEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
   type ComponentPropsWithoutRef,
   type ComponentType,
   type ElementType,
   type JSXElementConstructor,
+  type PropsWithChildren,
   type ReactNode,
-} from "react";
-import { molecule } from "./molecule";
-import { get } from "./ops";
-import type { Particle } from "./particle";
-import { async, wave } from "./wave";
-import type { Reaction } from "./reaction";
+  createContext,
+  isValidElement,
+  memo,
+  useContext,
+  useInsertionEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { molecule } from './molecule';
+import { get } from './ops';
+import type { Particle } from './particle';
+import type { Reaction } from './reaction';
+import { async, wave } from './wave';
 
 type ExternalStore<T> = {
   subscribe: Parameters<typeof useSyncExternalStore<T>>[0];
@@ -49,61 +52,10 @@ export function useParticleValue<T>(particle: Particle<T>): T {
   return value;
 }
 
-const COMPONENTS_CACHE = new WeakMap<Particle<any>, ComponentType<{}>>();
-
-type Reactive<T> = {
-  [k in Exclude<keyof T, symbol> as `$${k}`]?: () => T[k];
-};
-
-/**
- * Creates a reactive component based on the provided element type and props.
- * Marking any prop with the `$` prefix will make it reactive, changing its type to a molecule's factory function
- *
- * @example
- * const count = atom(0);
- * function Component() {
- *   return (
- *     <Reactive
- *        as="button"
- *        $style={get => ({ padding: `${get(count)}em` })}
- *        onClick={() => set(count, c => c + 1)}
- *     >
- *       <span>Count: {$(count)}</span>
- *     </Reactive>
- *   );
- * }
- * @template T The type of the reactive component.
- */
-export function Reactive<T extends ElementType>({
-  as: As,
-  ...props
-}: { as: T } & ComponentPropsWithoutRef<T> &
-  Reactive<ComponentPropsWithoutRef<T>>) {
-  return useMemo(() => {
-    const propsMol = molecule(
-      () =>
-        Object.fromEntries(
-          Object.entries(props).map(([key, value]) => {
-            if (key.startsWith("$")) {
-              return [key.slice(1), value()] as const;
-            }
-            return [key, value] as const;
-          })
-        ) as ComponentPropsWithoutRef<T>
-    );
-    const component = molecule(() => (
-      <As
-        {...(get(propsMol) as T extends JSXElementConstructor<infer P>
-          ? P extends JSX.IntrinsicAttributes
-            ? P
-            : never
-          : never)}
-      />
-    ));
-
-    return $(component);
-  }, [props]);
-}
+const COMPONENTS_CACHE = new WeakMap<
+  Particle<ReactNode>,
+  ComponentType<Record<string, never>>
+>();
 
 /**
  * Inline a particle with a renderable value within a component.
@@ -131,21 +83,22 @@ export function $<T extends ReactNode>(particle: Particle<T>) {
 
           if (isValidElement(value)) return value;
           switch (typeof value) {
-            case "boolean":
-            case "string":
-            case "number":
+            case 'boolean':
+            case 'string':
+            case 'number':
               return value;
-            case "object":
+            case 'object':
               if (!value) return value;
           }
 
-          throw new Error("Not a react node");
+          throw new Error('Not a react node');
         },
-        () => false
-      )
+        () => false,
+      ),
     );
   }
-  const Component = COMPONENTS_CACHE.get(particle)!;
+  const Component = COMPONENTS_CACHE.get(particle);
+  if (!Component) throw new Error('Component not found in cache');
   return <Component />;
 }
 
@@ -162,4 +115,24 @@ export function useReaction<Value>(reaction: Reaction<Value>) {
     return () => reaction.unobserve();
   }, [reaction]);
   return reaction;
+}
+
+export function createOrganism<T>(organismFactory: () => T) {
+  const OrganismContext = createContext<T | null>(null);
+  function Organism({ children }: PropsWithChildren) {
+    const [organism] = useState(organismFactory);
+    return (
+      <OrganismContext.Provider value={organism}>
+        {children}
+      </OrganismContext.Provider>
+    );
+  }
+
+  return Object.assign(Organism, {
+    use() {
+      const organism = useContext(OrganismContext);
+      if (!organism) throw new Error('Organism not found');
+      return organism;
+    },
+  });
 }

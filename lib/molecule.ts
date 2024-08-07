@@ -1,6 +1,6 @@
-import { getDependents, runInContext } from "./graph";
-import { get } from "./ops";
-import { notifySym, readSym, type Particle } from "./particle";
+import { getDependents, runInContext } from './graph';
+import { get } from './ops';
+import { type Particle, notifySym, readSym } from './particle';
 
 /**
  * Creates a new particle representing a molecule with the given factory function.
@@ -22,7 +22,9 @@ export function molecule<T>(factory: () => T): Particle<T> {
       const oldValue = cachedValue;
       const newValue = get(mol);
       if (newValue !== oldValue) {
-        deps.forEach((p) => p[notifySym]());
+        for (const p of deps) {
+          p[notifySym]();
+        }
       }
     },
     [readSym]() {

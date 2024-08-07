@@ -1,18 +1,23 @@
-import { render } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { expect, test } from "bun:test";
-import { atom, molecule, set, get } from ".";
-import { Reactive, $ } from "./react";
-import { Profiler } from "react";
+import { expect, test } from 'bun:test';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { Profiler, type PropsWithChildren } from 'react';
+import { atom, get, molecule, set } from '.';
+import { $, useParticleValue } from './react';
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
   const doubleCount = molecule(() => Math.floor(get(count) / 5));
-  const color = molecule(() => (get(count) < 10 ? "green" : "red"));
+  const color = molecule(() => (get(count) < 10 ? 'green' : 'red'));
 
   function Text() {
     onRender();
     return <span>Vite + React ({$(doubleCount)})</span>;
+  }
+
+  function Heading({ children }: PropsWithChildren) {
+    const colorValue = useParticleValue(color);
+    return <h1 style={{ color: colorValue }}>{children}</h1>;
   }
 
   function App() {
@@ -20,13 +25,16 @@ function createScenario(onRender: () => void, onMicroRender: () => void) {
     return (
       <>
         <Profiler id="heading-root" onRender={onMicroRender}>
-          <Reactive as="h1" $style={() => ({ color: get(color) })}>
+          <Heading>
             <Text />
-          </Reactive>
+          </Heading>
         </Profiler>
         <div className="card">
           <Profiler id="button-root" onRender={onMicroRender}>
-            <button onMouseDown={() => set(count, (count) => count + 1)}>
+            <button
+              type="button"
+              onMouseDown={() => set(count, (count) => count + 1)}
+            >
               count is {$(count)}
             </button>
           </Profiler>
@@ -43,7 +51,7 @@ function createScenario(onRender: () => void, onMicroRender: () => void) {
   return App;
 }
 
-test("renders", async () => {
+test('renders', async () => {
   let renderCount = 0;
   let microRenderCount = 0;
   const user = userEvent.setup();
@@ -53,23 +61,23 @@ test("renders", async () => {
     },
     () => {
       microRenderCount++;
-    }
+    },
   );
   const { getByRole } = render(<App />);
 
-  expect(getByRole("button").textContent).toBe("count is 0");
+  expect(getByRole('button').textContent).toBe('count is 0');
   expect(renderCount).toBe(2);
   expect(microRenderCount).toBe(2);
-  await user.click(getByRole("button"));
-  expect(getByRole("button").textContent).toBe("count is 1");
+  await user.click(getByRole('button'));
+  expect(getByRole('button').textContent).toBe('count is 1');
   expect(renderCount).toBe(2);
   expect(microRenderCount).toBe(3);
-  await user.click(getByRole("button"));
-  await user.click(getByRole("button"));
-  await user.click(getByRole("button"));
-  await user.click(getByRole("button"));
-  expect(getByRole("button").textContent).toBe("count is 5");
-  expect(getByRole("heading").textContent).toBe("Vite + React (1)");
+  await user.click(getByRole('button'));
+  await user.click(getByRole('button'));
+  await user.click(getByRole('button'));
+  await user.click(getByRole('button'));
+  expect(getByRole('button').textContent).toBe('count is 5');
+  expect(getByRole('heading').textContent).toBe('Vite + React (1)');
   expect(renderCount).toBe(2);
   expect(microRenderCount).toBe(8);
 });
