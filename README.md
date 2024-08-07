@@ -1,6 +1,6 @@
 # @oakfang/atmol
 
-This is a simple library to help you create a simple, fast, and easy to use signal-like state management, with a lot of inspiration from [jotai](https://jotai.org/).
+This is a simple library to help you create a simple, fast, and easy-to-use signal-like state management, with a lot of inspiration from [jotai](https://jotai.org/).
 
 ## Installation
 
@@ -10,7 +10,7 @@ bun add @oakfang/atmol
 
 ## tl;dr
 
-This library makes utilises the concept of a "particle" which holds a readable value, and can be observed for changes.
+This library utilises the concept of a "particle" which holds a readable value, and can be observed for changes.
 
 This library exports 3 main entities:
 
@@ -52,10 +52,10 @@ Atoms are read-write particles.
 
 Creates a new particle representing a molecule with the given computation function, which marks every "gotten" particle in it as a dependency of the molecule.
 The molecule tracks its dependencies and updates its value when needed.
-The molecule will attempt to defer its computation until it is necessary (e.g. when it's another particle's depencency, or when its value is being read).
+The molecule will attempt to defer its computation until it is necessary (e.g. when it's another particle's dependency, or when its value is being read).
 
 > [!NOTE]  
-> A molecule's computation funciton **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
+> A molecule's computation function **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
 
 ### `wave<T>(effect: () => void, scheduler?: WaveScheduler): Unsubscribe`
 
@@ -64,7 +64,7 @@ Creates a new effect that observes on multiple particles (using the same computa
 It returns a function that can be used to stop the wave from running.
 
 > [!NOTE]  
-> A waves's effect funciton **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
+> A waves's effect function **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
 
 ### `get<T>(p: Particle<T>): T`
 
@@ -88,7 +88,7 @@ Sets the current value of the provided atom, given a new value to set, or a func
 
 ## Schedulers
 
-The `wave` function can be given a `scheduler` argument, which is a an object of the following shape:
+The `wave` function can be given a `scheduler` argument, which is an object of the following shape:
 
 ```ts
 interface WaveScheduler {
@@ -102,11 +102,11 @@ Waves will register their effects with the scheduler upon their initialisation, 
 This library comes prepackaged with 2 schedulers, but you're encouraged to implement your own, if you need to:
 
 - `sync`: runs the wave synchronously after its initialisation, and synchronously every time any of its particles change. (This is the default scheduler)
-- `async`: runs the wave synchronously after its initialisation, but batch all other runs into a single asynchronous task every time any of its particles change.
+- `async`: runs the wave synchronously after its initialisation, but batches all other runs into a single asynchronous task every time any of its particles changes.
 
 ## Reaction API
 
-Both molecules and waves are designed to be synchrounous. Any attempt to use an asynchronous `get` operation inside of their respective computation functions will result in the dependency context being lost (until we have [Async Context](https://github.com/tc39/proposal-async-context), at least).
+Both molecules and waves are designed to be synchronous. Any attempt to use an asynchronous `get` operation inside of their respective computation functions will result in the dependency context being lost (until we have [Async Context](https://github.com/tc39/proposal-async-context), at least).
 
 This means, unfortunately, that you shouldn't do something like this:
 
@@ -123,7 +123,7 @@ wave(async () => {
 > [!CAUTION]
 > Do not copy the code from the example above, this is an example of what **not** to do.
 
-While you _could_ assign your dependencies to variables and _then_ use them in your computation function, this is not recommended either, since you wont have a guaranteed order of execution.
+While you _could_ assign your dependencies to variables and _then_ use them in your computation function, this is not recommended either, since you won't have a guaranteed order of execution.
 
 For example, this is a bad idea:
 
