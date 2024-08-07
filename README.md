@@ -252,3 +252,97 @@ A custom React hook that manages the observation of a reaction so that it become
 
 > [!NOTE]
 > Usually, in a React application, we would create our reactions with `autoObserve` set to `false` and the `keepPrevious` option set to `true`.
+
+### `createOrganism<T>(organismFactory: () => T): Organism<T>`
+
+When you're authoring a React application, you may find yourself wanting to share an encapsulated state+setters object between multiple components, in an injectable manner. This is basically a wrapper around `createContext` and `useContext`.
+
+```tsx
+import { atom, set, get } from "@oakfang/atmol";
+import { $, createOrganism, useParticleValue } from "@oakfang/atmol/react";
+
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+}
+
+const TodosService = createOrganism(() => {
+  const todos$ = atom<Todo[]>([]);
+
+  function addTodo(text: string) {
+    set(todos$, (current) =>
+      current.concat({ id: current.length + 1, text, completed: false })
+    );
+  }
+
+  function toggleTodo(id: number) {
+    set(todos$, (current) =>
+      current.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  }
+
+  return { todos$, addTodo, toggleTodo };
+});
+
+function Todo({ todo }: { todo: Todo }) {
+  const { toggleTodo } = TodosService.use();
+
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={todo.completed}
+        onChange={() => toggleTodo(todo.id)}
+      />
+      <span>{todo.text}</span>
+    </label>
+  );
+}
+
+function TodoList() {
+  const { todos$ } = TodosService.use();
+  const todos = useParticleValue(todos$);
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>
+          <Todo todo={todo} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function CreateTodo() {
+  const { addTodo } = TodosService.use();
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = e.target as HTMLFormElement;
+        const formData = new FormData(form);
+        const text = formData.get("text") as string;
+        addTodo(text);
+        form.reset();
+      }}
+    >
+      <input type="text" name="text" required />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+
+function App() {
+  return (
+    <TodosService>
+      <CreateTodo />
+      <TodoList />
+    </TodosService>
+  );
+}
+```
