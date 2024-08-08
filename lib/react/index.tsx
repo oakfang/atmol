@@ -1,8 +1,12 @@
+import { type SyntheticAtom, synth } from '@/base/synthetic-atom';
+import { atom, type Atom } from '@/base/atom';
+import { molecule } from '@/base/molecule';
+import { dispose, get } from '@/base/ops';
+import type { Particle } from '@/base/particle';
+import { async, wave } from '@/base/wave';
+import type { Reaction } from '@/reaction';
 import {
-  type ComponentPropsWithoutRef,
   type ComponentType,
-  type ElementType,
-  type JSXElementConstructor,
   type PropsWithChildren,
   type ReactNode,
   createContext,
@@ -10,15 +14,11 @@ import {
   memo,
   useContext,
   useInsertionEffect,
-  useMemo,
   useState,
   useSyncExternalStore,
+  useMemo,
+  useEffect,
 } from 'react';
-import { molecule } from './molecule';
-import { get } from './ops';
-import type { Particle } from './particle';
-import type { Reaction } from './reaction';
-import { async, wave } from './wave';
 
 type ExternalStore<T> = {
   subscribe: Parameters<typeof useSyncExternalStore<T>>[0];

@@ -1,4 +1,4 @@
-import { type Particle, async, atom, get, peek, set, wave } from '..';
+import { type Particle, async, atom, get, peek, set, wave } from '@/base';
 import { createQuantumPair } from './quantum-pair';
 
 /**
