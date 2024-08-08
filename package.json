@@ -1,6 +1,6 @@
 {
   "name": "@oakfang/atmol",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A reactive state management library for the web",
   "author": {
     "name": "Alon Niv",
