@@ -20,16 +20,20 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/base/index.js",
+      "types": "./dist/base/index.d.ts"
     },
     "./react": {
-      "import": "./dist/react.js",
-      "types": "./dist/react.d.ts"
+      "import": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts"
     },
     "./reaction": {
       "import": "./dist/reaction/index.js",
       "types": "./dist/reaction/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
     }
   },
   "devDependencies": {

@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
+import { type Particle, atom, get, molecule, set, wave } from '@/base';
+import { $, useParticleValue, useReaction } from '@/react';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createReaction } from '.';
-import { type Particle, atom, get, molecule, set, wave } from '..';
-import { $, useParticleValue, useReaction } from '../react';
 
 function waitForParticleValue<T>(particle: Particle<T>, value: T) {
   return new Promise<void>((resolve, reject) => {

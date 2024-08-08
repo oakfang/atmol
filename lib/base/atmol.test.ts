@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'bun:test';
-import { async, atom, dispose, get, molecule, peek, set, synth, wave } from '.';
+import { async, atom, get, molecule, peek, set, synth, wave } from '.';
 
 test('atom:get/set', () => {
   const a = atom(0);
@@ -135,7 +135,7 @@ function createStore(onUnsubscribe?: () => void) {
     sendUpdate: (newValue: number) => {
       const changed = value !== newValue;
       value = newValue;
-
+      
       if (changed) {
         for (const callback of subscribers) {
           callback();
@@ -148,7 +148,7 @@ function createStore(onUnsubscribe?: () => void) {
 test('synthetic atoms: get/set', () => {
   const store = createStore();
 
-  using a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  const a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
   const b = molecule(() => get(a) * 2);
 
   expect(get(b)).toBe(0);
@@ -157,26 +157,43 @@ test('synthetic atoms: get/set', () => {
   expect(get(b)).toBe(2);
 });
 
-test('synthetic atoms: unsubscribe (native)', async () => {
-  const unsub = mock();
-  const store = createStore(unsub);
-
-  expect(unsub).not.toHaveBeenCalled();
-
-  {
-    using a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
-  }
-
-  expect(unsub).toHaveBeenCalledTimes(1);
-});
-
-test('synthetic atoms: unsubscribe (operator)', async () => {
+test('synthetic atoms: unsubscribe', async () => {
   const unsub = mock();
   const store = createStore(unsub);
 
   expect(unsub).not.toHaveBeenCalled();
 
   const a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
-  dispose(a);
+  set(a, 1);
   expect(unsub).toHaveBeenCalledTimes(1);
+});
+
+test('synthetic atoms: resubscribe (internal)', async () => {
+  const unsub = mock();
+  const store = createStore(unsub);
+
+  expect(unsub).not.toHaveBeenCalled();
+
+  const a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  set(a, 1);
+
+  const b = molecule(() => get(a) * 2);
+  set(a, 2);
+
+  expect(peek(b)).toBe(4);
+});
+
+test('synthetic atoms: resubscribe (external)', async () => {
+  const unsub = mock();
+  const store = createStore(unsub);
+
+  expect(unsub).not.toHaveBeenCalled();
+
+  const a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  set(a, 1);
+
+  const b = molecule(() => get(a) * 2);
+  store.sendUpdate(2)
+
+  expect(peek(b)).toBe(4);
 });

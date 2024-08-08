@@ -1,21 +1,16 @@
 import { expect, test } from 'bun:test';
+import { atom, get, molecule, set, synth } from '@/base';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {
-  Profiler,
-  type PropsWithChildren,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { Profiler, type PropsWithChildren, useEffect, useState } from 'react';
 import {
   Link,
   RouterProvider,
   createMemoryRouter,
   useSearchParams,
 } from 'react-router-dom';
-import { atom, dispose, get, molecule, set, synth } from '.';
-import { $, createOrganism, useParticleValue } from './react';
+import { $, createOrganism, useParticleValue } from '.';
+import { SimpleStore } from '@/utils';
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
@@ -213,23 +208,13 @@ test('organisms', async () => {
 test('query params atoms', async () => {
   function useSearchParamsAtom() {
     const [params, setParams] = useSearchParams();
-    const subscribeRef = useRef<null | (() => void)>(null);
-    const currentParams = useRef(params);
-    currentParams.current = params;
-    const [spa] = useState(() => {
-      const subscribe = (callback: () => void) => {
-        subscribeRef.current = callback;
-        return () => {
-          subscribeRef.current = null;
-        };
-      };
-      return synth(subscribe, () => currentParams.current, setParams);
-    });
-    // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+    const [store] = useState(() => new SimpleStore(params));
+    const [spa] = useState(() =>
+      synth(store.subscribe, store.getCurrent, setParams),
+    );
     useEffect(() => {
-      subscribeRef.current?.();
-    }, [params]);
-    useEffect(() => () => dispose(spa), [spa]);
+      store.update(params);
+    }, [params, store]);
     return spa;
   }
 

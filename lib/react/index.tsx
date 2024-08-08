@@ -1,24 +1,19 @@
+import { get } from '@/base/ops';
+import type { Particle } from '@/base/particle';
+import { async, wave } from '@/base/wave';
+import type { Reaction } from '@/reaction';
 import {
-  type ComponentPropsWithoutRef,
-  type ComponentType,
-  type ElementType,
-  type JSXElementConstructor,
-  type PropsWithChildren,
-  type ReactNode,
   createContext,
   isValidElement,
   memo,
   useContext,
   useInsertionEffect,
-  useMemo,
   useState,
   useSyncExternalStore,
+  type ComponentType,
+  type PropsWithChildren,
+  type ReactNode,
 } from 'react';
-import { molecule } from './molecule';
-import { get } from './ops';
-import type { Particle } from './particle';
-import type { Reaction } from './reaction';
-import { async, wave } from './wave';
 
 type ExternalStore<T> = {
   subscribe: Parameters<typeof useSyncExternalStore<T>>[0];
@@ -71,7 +66,7 @@ const COMPONENTS_CACHE = new WeakMap<
  * }
  *
  * @param particle the particle to inline
- * @returns an annonymous component that tracks the particle's value and renders it
+ * @returns an anonymous component that tracks the particle's value and renders it
  */
 export function $<T extends ReactNode>(particle: Particle<T>) {
   if (!COMPONENTS_CACHE.has(particle)) {

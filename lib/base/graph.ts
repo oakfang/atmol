@@ -1,13 +1,10 @@
 import type { Particle } from './particle';
 
-const DEPENDENT_TO_DEPENDENCIES = new WeakMap<
-  Particle<unknown>,
-  Set<Particle<unknown>>
->();
-const DEPENDENCY_TO_DEPENDENTS = new WeakMap<
-  Particle<unknown>,
-  Set<Particle<unknown>>
->();
+const bucket = () => new WeakMap<Particle<unknown>, Set<Particle<unknown>>>();
+const empty = () => new Set<Particle<unknown>>();
+
+const DEPENDENT_TO_DEPENDENCIES = bucket();
+const DEPENDENCY_TO_DEPENDENTS = bucket();
 const CONTEXT_STACK = Array<Particle<unknown>>();
 
 export function runInContext<T>(particle: Particle<unknown>, fn: () => T): T {
@@ -23,11 +20,11 @@ export function markDependency(dependency: Particle<unknown>) {
   const dependent = CONTEXT_STACK[CONTEXT_STACK.length - 1];
   if (!dependent) return;
   if (!DEPENDENT_TO_DEPENDENCIES.has(dependent)) {
-    DEPENDENT_TO_DEPENDENCIES.set(dependent, new Set());
+    DEPENDENT_TO_DEPENDENCIES.set(dependent, empty());
   }
   DEPENDENT_TO_DEPENDENCIES.get(dependent)?.add(dependency);
   if (!DEPENDENCY_TO_DEPENDENTS.has(dependency)) {
-    DEPENDENCY_TO_DEPENDENTS.set(dependency, new Set());
+    DEPENDENCY_TO_DEPENDENTS.set(dependency, empty());
   }
   DEPENDENCY_TO_DEPENDENTS.get(dependency)?.add(dependent);
 }
@@ -42,5 +39,5 @@ export function releaseDependencies(particle: Particle<unknown>) {
 }
 
 export function getDependents(dependency: Particle<unknown>) {
-  return DEPENDENCY_TO_DEPENDENTS.get(dependency) ?? new Set();
+  return DEPENDENCY_TO_DEPENDENTS.get(dependency) ?? empty();
 }

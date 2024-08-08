@@ -1,5 +1,5 @@
-import { getDependents } from '../graph';
-import { type Particle, notifySym, readSym } from '../particle';
+import { getDependents } from '@/base/graph';
+import { type Particle, notifySym, readSym } from '@/base/particle';
 
 /**
  * Creates a "quantum pair" consisting of a particle and a write function.

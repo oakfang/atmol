@@ -1,5 +1,5 @@
-export const readSym = Symbol('read');
-export const notifySym = Symbol('notify');
+export const readSym = Symbol();
+export const notifySym = Symbol();
 
 /**
  * A particle is a lightweight object that represents a value that can be read and tracked for changes.

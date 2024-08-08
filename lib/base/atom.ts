@@ -1,7 +1,7 @@
 import { getDependents } from './graph';
 import { type Particle, notifySym, readSym } from './particle';
 
-export const writeSym = Symbol('write');
+export const writeSym = Symbol();
 
 export type Writer<T> = T | ((current: T) => T);
 
