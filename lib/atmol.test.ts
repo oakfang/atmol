@@ -1,5 +1,5 @@
 import { expect, mock, test } from 'bun:test';
-import { async, atom, get, molecule, peek, set, wave } from '.';
+import { async, atom, dispose, get, molecule, peek, set, synth, wave } from '.';
 
 test('atom:get/set', () => {
   const a = atom(0);
@@ -118,4 +118,65 @@ test('async wave scheduler', async () => {
 
   expect(get(b)).toBe(2);
   expect(get(c)).toBe(3);
+});
+
+function createStore(onUnsubscribe?: () => void) {
+  let value = 0;
+  const subscribers = new Set<() => void>();
+  return {
+    getSnapshot: () => value,
+    subscribe: (callback: () => void) => {
+      subscribers.add(callback);
+      return () => {
+        subscribers.delete(callback);
+        onUnsubscribe?.();
+      };
+    },
+    sendUpdate: (newValue: number) => {
+      const changed = value !== newValue;
+      value = newValue;
+
+      if (changed) {
+        for (const callback of subscribers) {
+          callback();
+        }
+      }
+    },
+  };
+}
+
+test('synthetic atoms: get/set', () => {
+  const store = createStore();
+
+  using a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  const b = molecule(() => get(a) * 2);
+
+  expect(get(b)).toBe(0);
+  set(a, 1);
+  expect(get(a)).toBe(1);
+  expect(get(b)).toBe(2);
+});
+
+test('synthetic atoms: unsubscribe (native)', async () => {
+  const unsub = mock();
+  const store = createStore(unsub);
+
+  expect(unsub).not.toHaveBeenCalled();
+
+  {
+    using a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  }
+
+  expect(unsub).toHaveBeenCalledTimes(1);
+});
+
+test('synthetic atoms: unsubscribe (operator)', async () => {
+  const unsub = mock();
+  const store = createStore(unsub);
+
+  expect(unsub).not.toHaveBeenCalled();
+
+  const a = synth(store.subscribe, store.getSnapshot, store.sendUpdate);
+  dispose(a);
+  expect(unsub).toHaveBeenCalledTimes(1);
 });

@@ -1,6 +1,6 @@
 {
   "name": "@oakfang/atmol",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A reactive state management library for the web",
   "author": {
     "name": "Alon Niv",
@@ -41,6 +41,7 @@
     "@types/react": "^18.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
     "tsup": "^8.0.2"
   },
   "peerDependencies": {

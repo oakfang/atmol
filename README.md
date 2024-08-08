@@ -57,6 +57,40 @@ The molecule will attempt to defer its computation until it is necessary (e.g. w
 > [!NOTE]  
 > A molecule's computation function **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
 
+### `synth<T>(subscribe: Subscribe, getSnapshot: GetSnapshot<T>, sendUpdate: SendUpdate<T>): SyntheticAtom<T>`
+
+Creates a new synthetic atom that syncs with a non-particle data store, using very similar APIs to [React's `syncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#usesyncexternalstore).
+
+It is disposable either by using the `using` resource management syntax, or by calling the `dispose` operator on it.
+
+```tsx
+import { synth } from "@oakfang/atmol";
+import { useSearchParams } from "react-router";
+import { useState, useEffect, useRef } from "react";
+
+export function useSearchParamsAtom() {
+  const [params, setParams] = useSearchParams();
+  const subscribeRef = useRef<null | (() => void)>(null);
+  const currentParams = useRef(params);
+  currentParams.current = params;
+  const [spa] = useState(() => {
+    const subscribe = (callback: () => void) => {
+      subscribeRef.current = callback;
+      return () => {
+        subscribeRef.current = null;
+      };
+    };
+    return synth(subscribe, () => currentParams.current, setParams);
+  });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    subscribeRef.current?.();
+  }, [params]);
+  useEffect(() => () => dispose(spa), [spa]);
+  return spa;
+}
+```
+
 ### `wave<T>(effect: () => void, scheduler?: WaveScheduler): Unsubscribe`
 
 Creates a new effect that observes on multiple particles (using the same computation-context as a `molecule`), and runs immediately, and when its composing particles change. These later changes can be scheduled using the `scheduler` argument (defaults to being applied synchronously). See [Schedulers](#schedulers) for more information.
