@@ -3,6 +3,9 @@ import type { Particle } from '@/base/particle';
 import { async, wave } from '@/base/wave';
 import type { Reaction } from '@/reaction';
 import {
+  type ComponentType,
+  type PropsWithChildren,
+  type ReactNode,
   createContext,
   isValidElement,
   memo,
@@ -10,9 +13,6 @@ import {
   useInsertionEffect,
   useState,
   useSyncExternalStore,
-  type ComponentType,
-  type PropsWithChildren,
-  type ReactNode,
 } from 'react';
 
 type ExternalStore<T> = {

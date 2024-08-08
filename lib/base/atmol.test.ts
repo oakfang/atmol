@@ -135,7 +135,7 @@ function createStore(onUnsubscribe?: () => void) {
     sendUpdate: (newValue: number) => {
       const changed = value !== newValue;
       value = newValue;
-      
+
       if (changed) {
         for (const callback of subscribers) {
           callback();
@@ -193,7 +193,7 @@ test('synthetic atoms: resubscribe (external)', async () => {
   set(a, 1);
 
   const b = molecule(() => get(a) * 2);
-  store.sendUpdate(2)
+  store.sendUpdate(2);
 
   expect(peek(b)).toBe(4);
 });

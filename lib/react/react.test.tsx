@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 import { atom, get, molecule, set, synth } from '@/base';
+import { SimpleStore } from '@/utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Profiler, type PropsWithChildren, useEffect, useState } from 'react';
@@ -10,7 +11,6 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import { $, createOrganism, useParticleValue } from '.';
-import { SimpleStore } from '@/utils';
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
