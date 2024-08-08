@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { atom, dispose, get, molecule, set, synth } from '@/base';
+import { atom, get, molecule, set, synth } from '@/base';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Profiler, type PropsWithChildren, useEffect, useState } from 'react';
@@ -10,6 +10,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 import { $, createOrganism, useParticleValue } from '.';
+import { SimpleStore } from '@/utils';
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
@@ -205,37 +206,6 @@ test('organisms', async () => {
 });
 
 test('query params atoms', async () => {
-  class SimpleStore<T> {
-    #value: T;
-    #subscribers = new Set<() => void>();
-    constructor(initialValue: T) {
-      this.#value = initialValue;
-    }
-
-    #notify() {
-      for (const sub of this.#subscribers) {
-        sub();
-      }
-    }
-
-    getCurrent = () => this.#value;
-
-    subscribe = (listener: () => void) => {
-      this.#subscribers.add(listener);
-
-      return () => {
-        this.#subscribers.delete(listener);
-      };
-    };
-
-    update(value: T) {
-      if (value !== this.#value) {
-        this.#value = value;
-        this.#notify();
-      }
-    }
-  }
-
   function useSearchParamsAtom() {
     const [params, setParams] = useSearchParams();
     const [store] = useState(() => new SimpleStore(params));
@@ -245,7 +215,6 @@ test('query params atoms', async () => {
     useEffect(() => {
       store.update(params);
     }, [params, store]);
-    useEffect(() => () => dispose(spa), [spa]);
     return spa;
   }
 

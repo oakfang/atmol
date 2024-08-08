@@ -1,14 +1,8 @@
-import { type SyntheticAtom, synth } from '@/base/synthetic-atom';
-import { atom, type Atom } from '@/base/atom';
-import { molecule } from '@/base/molecule';
-import { dispose, get } from '@/base/ops';
+import { get } from '@/base/ops';
 import type { Particle } from '@/base/particle';
 import { async, wave } from '@/base/wave';
 import type { Reaction } from '@/reaction';
 import {
-  type ComponentType,
-  type PropsWithChildren,
-  type ReactNode,
   createContext,
   isValidElement,
   memo,
@@ -16,8 +10,9 @@ import {
   useInsertionEffect,
   useState,
   useSyncExternalStore,
-  useMemo,
-  useEffect,
+  type ComponentType,
+  type PropsWithChildren,
+  type ReactNode,
 } from 'react';
 
 type ExternalStore<T> = {
@@ -71,7 +66,7 @@ const COMPONENTS_CACHE = new WeakMap<
  * }
  *
  * @param particle the particle to inline
- * @returns an annonymous component that tracks the particle's value and renders it
+ * @returns an anonymous component that tracks the particle's value and renders it
  */
 export function $<T extends ReactNode>(particle: Particle<T>) {
   if (!COMPONENTS_CACHE.has(particle)) {

@@ -6,18 +6,6 @@ type Subscribe = (listener: () => void) => () => void;
 type GetSnapshot<T> = () => T;
 type SendUpdate<T> = (value: T) => void;
 
-export const disposeSym: typeof Symbol.dispose =
-  Symbol.dispose ?? Symbol('dispose');
-
-interface Disposable {
-  readonly [disposeSym]: () => void;
-}
-
-/**
- * Interface extending {@link Atom<T>} that syncs with a non-particle data store.
- */
-export type SyntheticAtom<T> = Disposable & Atom<T>;
-
 /**
  * Create a {@link SyntheticAtom} that syncs with a non-particle data store, using very similar APIs to React's `syncExternalStore`.
  * https://react.dev/reference/react/useSyncExternalStore#usesyncexternalstore
@@ -31,35 +19,45 @@ export function synth<T>(
   subscribe: Subscribe,
   getSnapshot: GetSnapshot<T>,
   sendUpdate: SendUpdate<T>,
-): SyntheticAtom<T> {
-  let currentValue = getSnapshot();
+): Atom<T> {
+  let unsubscribe: null | (() => void) = null;
+
+  function reSubscribe() {
+    unsubscribe?.();
+    unsubscribe = subscribe(notify);
+  }
 
   const atm = {
-    [readSym]: () => currentValue,
+    [readSym]: () => {
+      if (getDependents(atm).size && !unsubscribe) {
+        reSubscribe();
+      }
+      return getSnapshot();
+    },
     [writeSym](f) {
       const nextValue =
-        typeof f === 'function' ? (f as (v: T) => T)(currentValue) : f;
+        typeof f === 'function' ? (f as (v: T) => T)(getSnapshot()) : f;
+      if (!unsubscribe) {
+        reSubscribe();
+      }
+
       sendUpdate(nextValue);
     },
     [notifySym]() {},
-    [disposeSym]() {
-      unsubscribe();
-    },
-  } satisfies SyntheticAtom<T>;
+  } satisfies Atom<T>;
 
   function notify() {
-    for (const p of getDependents(atm)) {
+    const deps = getDependents(atm);
+    if (deps.size === 0) {
+      unsubscribe?.();
+      unsubscribe = null;
+    }
+    for (const p of deps) {
       p[notifySym]();
     }
   }
 
-  const unsubscribe = subscribe(() => {
-    const nextValue = getSnapshot();
-    if (nextValue !== currentValue) {
-      currentValue = nextValue;
-      notify();
-    }
-  });
+  reSubscribe();
 
   return atm;
 }

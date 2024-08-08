@@ -1,7 +1,6 @@
 import { type Atom, type Writer, writeSym } from './atom';
 import { markDependency } from './graph';
 import { type Particle, readSym } from './particle';
-import { type SyntheticAtom, disposeSym } from './synthetic-atom';
 
 /**
  * Retrieves the current value from the given {@link Particle} and mark it as a dependency in the current context.
@@ -32,13 +31,4 @@ export function peek<T>(particle: Particle<T>): T {
  */
 export function set<T>(atom: Atom<T>, value: Writer<T>) {
   atom[writeSym](value);
-}
-
-/**
- * Force disposal of the given {@link SyntheticAtom}, without using the `using` syntax.
- *
- * @param syntheticAtom The {@link SyntheticAtom} to dispose.
- */
-export function dispose<T>(syntheticAtom: SyntheticAtom<T>) {
-  syntheticAtom[disposeSym]();
 }

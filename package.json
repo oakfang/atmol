@@ -30,6 +30,10 @@
     "./reaction": {
       "import": "./dist/reaction/index.js",
       "types": "./dist/reaction/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
     }
   },
   "devDependencies": {

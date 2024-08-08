@@ -1,7 +1,12 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['lib/base/index.ts', 'lib/react/index.tsx', 'lib/reaction/index.ts'],
+  entry: [
+    'lib/base/index.ts',
+    'lib/react/index.tsx',
+    'lib/reaction/index.ts',
+    'lib/utils/index.ts',
+  ],
   format: ['esm'],
   target: 'es2022',
   platform: 'browser',

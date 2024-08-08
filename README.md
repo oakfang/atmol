@@ -61,32 +61,21 @@ The molecule will attempt to defer its computation until it is necessary (e.g. w
 
 Creates a new synthetic atom that syncs with a non-particle data store, using very similar APIs to [React's `syncExternalStore`](https://react.dev/reference/react/useSyncExternalStore#usesyncexternalstore).
 
-It is disposable either by using the `using` resource management syntax, or by calling the `dispose` operator on it.
-
 ```tsx
 import { synth } from "@oakfang/atmol";
+import { SimpleStore } from "@oakfang/atmol/utils";
 import { useSearchParams } from "react-router";
 import { useState, useEffect, useRef } from "react";
 
 export function useSearchParamsAtom() {
   const [params, setParams] = useSearchParams();
-  const subscribeRef = useRef<null | (() => void)>(null);
-  const currentParams = useRef(params);
-  currentParams.current = params;
-  const [spa] = useState(() => {
-    const subscribe = (callback: () => void) => {
-      subscribeRef.current = callback;
-      return () => {
-        subscribeRef.current = null;
-      };
-    };
-    return synth(subscribe, () => currentParams.current, setParams);
-  });
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  const [store] = useState(() => new SimpleStore(params));
+  const [spa] = useState(() =>
+    synth(store.subscribe, store.getCurrent, setParams)
+  );
   useEffect(() => {
-    subscribeRef.current?.();
-  }, [params]);
-  useEffect(() => () => dispose(spa), [spa]);
+    store.update(params);
+  }, [params, store]);
   return spa;
 }
 ```
