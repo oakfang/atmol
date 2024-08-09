@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { atom, get, molecule, set, synth } from '@/base';
 import { SimpleStore } from '@/utils';
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Profiler, type PropsWithChildren, useEffect, useState } from 'react';
 import {
@@ -10,7 +10,7 @@ import {
   createMemoryRouter,
   useSearchParams,
 } from 'react-router-dom';
-import { $, createOrganism, useParticleValue } from '.';
+import { $, createOrganism, useParticleValue, useReactiveQuery } from '.';
 
 function createScenario(onRender: () => void, onMicroRender: () => void) {
   const count = atom(0);
@@ -263,4 +263,83 @@ test('query params atoms', async () => {
   await user.click(app.getByRole('link', { name: 'Foo' }));
   expect(app.queryByText('foo: 4')).not.toBeNull();
   expect(app.queryByText('bar: 2')).toBeNull();
+});
+
+test('useParticle and useReactiveQuery', async () => {
+  const users = {
+    aline: { name: 'Alice' },
+    bob: { name: 'Bob' },
+  };
+
+  function App() {
+    const [user, setUser] = useState<string>('');
+    const { state, result, error } = useReactiveQuery(user, async (user) => {
+      if (!user) return null;
+      await Bun.sleep(100);
+      if (user in users) {
+        return users[user as keyof typeof users].name;
+      }
+      throw new Error('User not found');
+    });
+    const errorValue = useParticleValue(error) as Error | null;
+
+    return (
+      <div>
+        <select value={user} onChange={(e) => setUser(e.target.value)}>
+          <option value="">Select a user</option>
+          {Object.entries(users).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value.name}
+            </option>
+          ))}
+          <option value="error">Error</option>
+        </select>
+        <div data-testid="state">{$(state)}</div>
+        <div data-testid="result">{$(result)}</div>
+        <div data-testid="error">{errorValue?.message ?? 'No error'}</div>
+      </div>
+    );
+  }
+
+  const user = userEvent.setup();
+  const app = render(<App />);
+  const scn = {
+    get state() {
+      return app.getByTestId('state');
+    },
+    get result() {
+      return app.getByTestId('result');
+    },
+    get error() {
+      return app.getByTestId('error');
+    },
+  };
+
+  expect(scn.state.textContent).toBe('idle');
+  expect(scn.result.textContent).toBe('');
+  expect(scn.error.textContent).toBe('No error');
+  
+  await user.selectOptions(app.getByRole('combobox'), 'Alice');
+  expect(scn.state.textContent).toBe('pending');
+  expect(scn.result.textContent).toBe('');
+  expect(scn.error.textContent).toBe('No error');
+
+  await waitFor(() => expect(scn.state.textContent).toBe('success'));
+  expect(scn.result.textContent).toBe('Alice');
+  expect(scn.error.textContent).toBe('No error');
+
+  await user.selectOptions(app.getByRole('combobox'), 'bob');
+  expect(scn.state.textContent).toBe('pending');
+  expect(scn.result.textContent).toBe('Alice');
+  expect(scn.error.textContent).toBe('No error');
+  await waitFor(() => expect(scn.state.textContent).toBe('success'));
+  expect(scn.result.textContent).toBe('Bob');
+
+  await user.selectOptions(app.getByRole('combobox'), 'error');
+  expect(scn.state.textContent).toBe('pending');
+  expect(scn.result.textContent).toBe('Bob');
+  expect(scn.error.textContent).toBe('No error');
+  await waitFor(() => expect(scn.state.textContent).toBe('error'));
+  expect(scn.result.textContent).toBe('');
+  expect(scn.error.textContent).toBe('User not found');
 });

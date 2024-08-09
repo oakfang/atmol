@@ -1,7 +1,7 @@
 import { get } from '@/base/ops';
 import type { Particle } from '@/base/particle';
 import { async, wave } from '@/base/wave';
-import type { Reaction } from '@/reaction';
+import { type Reaction, createQuantumPair, createReaction } from '@/reaction';
 import {
   type ComponentType,
   type PropsWithChildren,
@@ -11,6 +11,7 @@ import {
   memo,
   useContext,
   useInsertionEffect,
+  useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -110,6 +111,41 @@ export function useReaction<Value>(reaction: Reaction<Value>) {
     return () => reaction.unobserve();
   }, [reaction]);
   return reaction;
+}
+
+/**
+ * Create a self-setting particle tied to a specific value.
+ *
+ * @param particleValue
+ * @returns {Particle<T>} a persistent reference to the particle tied to the passed value
+ */
+export function useParticle<T>(particleValue: T): Particle<T> {
+  const [[particle, setter]] = useState(() => createQuantumPair(particleValue));
+  const valueRef = useRef(particleValue);
+  if (valueRef.current !== particleValue) {
+    valueRef.current = particleValue;
+    setter(particleValue);
+  }
+
+  return particle;
+}
+
+/**
+ * Create a reactive query that automatically observes the input value and updates the output reaction when the input changes.
+ *
+ * @param input the input value to observe
+ * @param query the asynchronous function to execute when the input changes
+ * @returns the output reaction
+ */
+export function useReactiveQuery<Input, Output>(
+  input: Input,
+  query: (input: Input) => Promise<Output>,
+) {
+  const input$ = useParticle(input);
+  const [reaction] = useState(() =>
+    createReaction(input$, query, { autoObserve: false, keepPrevious: true }),
+  );
+  return useReaction(reaction);
 }
 
 export function createOrganism<T>(organismFactory: () => T) {

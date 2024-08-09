@@ -250,9 +250,14 @@ Internally, reaction properties are implemented using this function.
 
 The `@oakfang/atmol/react` endpoint exports a few neat utilities for working with React.
 
+### `useParticle<T>(particleValue: T): Particle<T>`
+
+Create a self-setting particle tied to a specific value.
+Changing the value of the particle will update the value of the returned particle, but won't trigger a re-render.
+
 ### `useParticleValue<T>(particle: Particle<T>): T`
 
-A custom React hook that returns the current value of a given particle and updates the component when the value changes.
+A custom React hook that returns the current value of a given particle and re-renders the component when the value changes.
 
 ### `$<T extends ReactNode>(particle: Particle<T>): ReactNode`
 
@@ -275,6 +280,11 @@ A custom React hook that manages the observation of a reaction so that it become
 
 > [!NOTE]
 > Usually, in a React application, we would create our reactions with `autoObserve` set to `false` and the `keepPrevious` option set to `true`.
+> This is a relatively low-level API, and is not recommended for most use cases. See the `useReactiveQuery` hook (below) instead.
+
+### `useReactiveQuery<Input, Output>(input: Input, query: (input: Input) => Promise<Output>): Reaction<Output>`
+
+Create a reactive query that automatically observes the input value and updates the output reaction when the input changes.
 
 ### `createOrganism<T>(organismFactory: () => T): Organism<T>`
 
