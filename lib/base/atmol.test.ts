@@ -1,11 +1,28 @@
 import { expect, mock, test } from 'bun:test';
-import { async, atom, get, molecule, peek, set, synth, wave } from '.';
+import {
+  async,
+  atom,
+  get,
+  isParticle,
+  molecule,
+  peek,
+  set,
+  synth,
+  wave,
+} from '.';
 
 test('atom:get/set', () => {
   const a = atom(0);
   expect(get(a)).toBe(0);
   set(a, 1);
   expect(get(a)).toBe(1);
+});
+
+test('isParticle', () => {
+  expect(isParticle(5)).toBeFalse();
+  const a = atom(0);
+  expect(isParticle(a)).toBeTrue();
+  expect(isParticle(molecule(() => {}))).toBeTrue();
 });
 
 test('waves(atoms)', () => {

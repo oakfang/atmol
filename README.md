@@ -54,6 +54,10 @@ Creates a new particle representing a molecule with the given computation functi
 The molecule tracks its dependencies and updates its value when needed.
 The molecule will attempt to defer its computation until it is necessary (e.g. when it's another particle's dependency, or when its value is being read).
 
+### `isParticle(object: unknown): object is Particle<unknown>`
+
+Returns `true` if the passed argument is any type of readable-particle (e.g., atom, molecule, or synthetic atom).
+
 > [!NOTE]  
 > A molecule's computation function **must** be synchronous, for reasons explored in the [Reaction API](#reaction-api) section.
 
@@ -71,7 +75,7 @@ export function useSearchParamsAtom() {
   const [params, setParams] = useSearchParams();
   const [store] = useState(() => new SimpleStore(params));
   const [spa] = useState(() =>
-    synth(store.subscribe, store.getCurrent, setParams)
+    synth(store.subscribe, store.getCurrent, setParams),
   );
   useEffect(() => {
     store.update(params);
@@ -305,15 +309,15 @@ const TodosService = createOrganism(() => {
 
   function addTodo(text: string) {
     set(todos$, (current) =>
-      current.concat({ id: current.length + 1, text, completed: false })
+      current.concat({ id: current.length + 1, text, completed: false }),
     );
   }
 
   function toggleTodo(id: number) {
     set(todos$, (current) =>
       current.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+      ),
     );
   }
 
@@ -377,5 +381,38 @@ function App() {
       <TodoList />
     </TodosService>
   );
+}
+```
+
+## Miscellaneous Utilities
+
+The `@oakfang/atmol/utils` endpoint exports a few neat utilities for using particles as other kinds of values.
+
+### `SimpleStore<T>`
+
+atmol's `SimpleStore` is a very minimal interface for storing a value, updating it explicitly, and being able to subscribe to these explicit updates.
+
+Its interface is as follows:
+
+```ts
+interface SimpleStore<T> {
+  constructor(initialValue: T);
+  getCurrent(): T;
+  subscribe(onUpdate: (() => void)): (() => void); // returns unsubscribe function
+  update(newValue: T): void;
+}
+```
+
+### `asAsyncIterable<T>(particle<T>): AsyncIterable<T, T>`
+
+Create an `AsyncIterable` object from a particle. It is mostly an imperative wrapper over a sync `wave`.
+
+Example usage:
+
+```ts
+async function logParticleChanges(particle: Particle<T>) {
+  for await (const value of asAsyncIterable(particle)) {
+    console.log(value);
+  }
 }
 ```
