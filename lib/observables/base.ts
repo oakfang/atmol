@@ -13,7 +13,9 @@ if (!('observable' in Symbol)) {
 
 export class Observable<T> implements IObservable<T> {
   static of<T>(...args: T[]): Observable<T> {
-    return new Observable((observer) => {
+    // biome-ignore lint/complexity/noThisInStatic: by the spec
+    const Ctor = typeof this === 'function' ? this : Observable;
+    return new Ctor((observer) => {
       for (const x of args) {
         observer.next(x);
       }
@@ -24,32 +26,47 @@ export class Observable<T> implements IObservable<T> {
     source: Observable<T> | AsyncIterable<T> | Iterable<T> | Promise<T>,
   ): Observable<T> {
     if (!source || typeof source !== 'object') throw new TypeError();
+    // biome-ignore lint/complexity/noThisInStatic: by the spec
+    const Ctor = typeof this === 'function' ? this : Observable;
     if (Symbol.observable in source) {
-      return new Observable((observer) => {
-        const sub = source[Symbol.observable]().subscribe(observer);
-        return () => sub.unsubscribe();
-      });
+      const origin = source[Symbol.observable]();
+      if (typeof origin !== 'object' || origin === null) throw new TypeError();
+      if ('constructor' in origin && origin.constructor === Ctor) {
+        return origin;
+      }
+      return new Ctor((observer) => origin.subscribe(observer));
     }
     if (Symbol.asyncIterator in source) {
-      return new Observable(async (observer) => {
-        for await (const x of source) {
-          observer.next(x);
-        }
+      return new Ctor((observer) => {
+        (async () => {
+          try {
+            for await (const x of source) {
+              observer.next(x);
+            }
+            observer.complete();
+          } catch (error) {
+            observer.error(error);
+          }
+        })();
       });
     }
     if (Symbol.iterator in source) {
-      return new Observable((observer) => {
+      return new Ctor((observer) => {
         for (const x of source) {
           observer.next(x);
         }
+        observer.complete();
       });
     }
-    return new Observable((observer) =>
-      source
-        .then((v) => observer.next(v))
-        .catch((e) => observer.error(e))
-        .finally(() => observer.complete()),
-    );
+    if (source instanceof Promise) {
+      return new Ctor((observer) => {
+        source
+          .then((v) => observer.next(v))
+          .catch((e) => observer.error(e))
+          .finally(() => observer.complete());
+      });
+    }
+    throw new TypeError();
   }
 
   #observerFunction: SubscriberFunction<T>;
@@ -93,8 +110,14 @@ export class Observable<T> implements IObservable<T> {
       });
     }
 
+    let cleanupFlag = false;
+    let canRunCleanup = false;
+
     function cleanup() {
+      cleanupFlag = true;
       observer = undefined;
+      if (!canRunCleanup) return;
+      canRunCleanup = false;
       for (const fn of teardowns) {
         fn();
       }
@@ -112,16 +135,50 @@ export class Observable<T> implements IObservable<T> {
     const subscriptionObserver = {
       next(value) {
         if (subscription.closed) return;
-        observer?.next?.(value);
+        try {
+          const next = observer?.next;
+          if (typeof next === 'function') {
+            next.call(observer, value);
+          }
+        } catch (e) {
+          console.error(
+            'A call to an observer\' "next" method has thrown the following error:',
+            e,
+          );
+        }
       },
       error(errorValue) {
         if (subscription.closed) return;
-        observer?.error?.(errorValue);
+        const currentObserver = observer;
+        observer = undefined;
+        try {
+          const error = currentObserver?.error;
+          if (typeof error === 'function') {
+            error.call(currentObserver, errorValue);
+          }
+        } catch (e) {
+          console.error(
+            'A call to an observer\' "error" method has thrown the following error:',
+            e,
+          );
+        }
         cleanup();
       },
       complete() {
         if (subscription.closed) return;
-        observer?.complete?.();
+        const currentObserver = observer;
+        observer = undefined;
+        try {
+          const complete = currentObserver?.complete;
+          if (typeof complete === 'function') {
+            complete.call(currentObserver);
+          }
+        } catch (e) {
+          console.error(
+            'A call to an observer\' "complete" method has thrown the following error:',
+            e,
+          );
+        }
         cleanup();
       },
       get closed() {
@@ -129,9 +186,47 @@ export class Observable<T> implements IObservable<T> {
       },
     } satisfies SubscriptionObserver<T>;
 
-    const initialCleanup = this.#observerFunction(subscriptionObserver);
-    if (typeof initialCleanup === 'function') {
-      teardowns.push(initialCleanup as () => void);
+    observer.start?.(subscription);
+
+    try {
+      if (!subscription.closed) {
+        const initialCleanup = this.#observerFunction(subscriptionObserver);
+        switch (typeof initialCleanup) {
+          case 'function':
+            teardowns.push(initialCleanup as () => void);
+            break;
+          case 'object':
+            if (initialCleanup) {
+              if (
+                'unsubscribe' in initialCleanup &&
+                typeof initialCleanup.unsubscribe === 'function'
+              ) {
+                teardowns.push(initialCleanup.unsubscribe.bind(initialCleanup));
+              } else {
+                subscriptionObserver.error(
+                  new TypeError(
+                    'Subscriber function must return a function, a subscription object, or nothing',
+                  ),
+                );
+              }
+            }
+            break;
+          case 'undefined':
+            break;
+          default:
+            subscriptionObserver.error(
+              new TypeError(
+                'Subscriber function must return a function, a subscription object, or nothing',
+              ),
+            );
+        }
+      }
+      canRunCleanup = true;
+      if (cleanupFlag) {
+        cleanup();
+      }
+    } catch (error) {
+      subscriptionObserver.error(error);
     }
 
     return subscription;
