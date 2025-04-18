@@ -65,7 +65,7 @@ test('reaction (error)', async () => {
   expect(get(reaction.error)).toBe(-1);
 });
 
-test('resction in react components', async () => {
+test('reaction in react components', async () => {
   const resourceType = atom<'foo' | 'bar'>('foo');
   const reaction = createReaction(
     resourceType,

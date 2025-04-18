@@ -32,3 +32,10 @@ export function peek<T>(particle: Particle<T>): T {
 export function set<T>(atom: Atom<T>, value: Writer<T>) {
   atom[writeSym](value);
 }
+
+export function isParticle(x: unknown): x is Particle<unknown> {
+  if (x && typeof x === 'object') {
+    return readSym in x;
+  }
+  return false;
+}
