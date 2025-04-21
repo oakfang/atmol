@@ -4,6 +4,7 @@ import type {
   Observer,
   Subscription,
   SubscriptionObserver,
+  ObservableLike,
 } from './spec';
 
 if (!('observable' in Symbol)) {
@@ -19,12 +20,11 @@ export class Observable<T> implements IObservable<T> {
       for (const x of args) {
         observer.next(x);
       }
+      observer.complete();
     });
   }
 
-  static from<T>(
-    source: Observable<T> | AsyncIterable<T> | Iterable<T> | Promise<T>,
-  ): Observable<T> {
+  static from<T>(source: ObservableLike<T>): Observable<T> {
     if (!source || typeof source !== 'object') throw new TypeError();
     // biome-ignore lint/complexity/noThisInStatic: by the spec
     const Ctor = typeof this === 'function' ? this : Observable;
@@ -105,9 +105,13 @@ export class Observable<T> implements IObservable<T> {
         ? (onError as { signal?: AbortSignal })
         : undefined;
     if (options?.signal) {
-      options.signal.addEventListener('abort', () => {
-        if (observer) cleanup();
-      });
+      options.signal.addEventListener(
+        'abort',
+        () => {
+          if (observer) cleanup();
+        },
+        { once: true },
+      );
     }
 
     let cleanupFlag = false;

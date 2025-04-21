@@ -40,3 +40,5 @@ export interface IObservable<T> {
   ): Subscription;
   [Symbol.observable](): IObservable<T>;
 }
+
+export type ObservableLike<T> = IObservable<T> | AsyncIterable<T> | Iterable<T> | Promise<T>

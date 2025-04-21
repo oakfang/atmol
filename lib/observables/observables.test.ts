@@ -1,5 +1,14 @@
-import { test, expect, mock, describe, it } from 'bun:test';
+import { test, expect, mock, describe, it, beforeEach, afterEach } from 'bun:test';
 import { Observable, type Observer, type SubscriptionObserver } from '.';
+
+let errMock: typeof console.error;
+beforeEach(() => {
+  errMock = console.error;
+  console.error = mock();
+});
+afterEach(() => {
+  console.error = errMock;
+});
 
 describe('Observable', () => {
   test('Argument types', () => {
@@ -296,6 +305,21 @@ describe('Observable.prototype.subscribe', () => {
 
     subscription = observable.subscribe(observer);
     expect(events).toEqual(['start']);
+  });
+
+  test('cleanup function is called when signal is aborted', () => {
+    let observer!: SubscriptionObserver<void>;
+    let called = 0;
+    const observable = new Observable<void>((x) => {
+      observer = x;
+      return () => called++;
+    });
+
+    const ctrl = new AbortController();
+    observable.subscribe({}, { signal: ctrl.signal });
+
+    ctrl.abort();
+    expect(called).toBe(1);
   });
 });
 
@@ -713,6 +737,7 @@ describe('observer:next', () => {
     expect(subscription.closed).toBe(false);
   });
 });
+
 describe('observer:error', () => {
   test('SubscriptionObserver.prototype has an error method', () => {
     let observer!: SubscriptionObserver<unknown>;
@@ -901,6 +926,7 @@ describe('observer:error', () => {
     });
   });
 });
+
 describe('observer:complete', () => {
   test('SubscriptionObserver.prototype has an complete method', () => {
     let observer!: SubscriptionObserver<unknown>;
@@ -1086,6 +1112,7 @@ describe('observer:complete', () => {
     });
   });
 });
+
 describe('observer:closed', () => {
   test('SubscriptionObserver.prototype has a closed property', () => {
     let observer!: SubscriptionObserver<unknown>;
